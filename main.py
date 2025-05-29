@@ -1,6 +1,9 @@
 import pygame
+import sys
 from constants import *
 from player import Player
+from asteroid import Asteroid
+from asteroidfield import AsteroidField
 
 class Game:
     def __init__(self):
@@ -8,12 +11,24 @@ class Game:
         print("Starting Asteroids!")
         print(f"Screen width: {SCREEN_WIDTH}")
         print(f"Screen height: {SCREEN_HEIGHT}")
-        
         self.clock = pygame.time.Clock()
-        self.dt = 0
         x = SCREEN_WIDTH/2
         y = SCREEN_HEIGHT/2
+
+
+        self.updatable = pygame.sprite.Group() 
+        self.drawable = pygame.sprite.Group() 
+        self.asteroids = pygame.sprite.Group()
+
+        Asteroid.containers = (self.updatable, self.drawable, self.asteroids)
+        AsteroidField.containers = self.updatable
+        self.asteroidField = AsteroidField()
+
+        Player.containers = (self.updatable, self.drawable)
         self.player = Player(x,y)
+
+        self.dt = 0
+
         self.main()
 
     def main(self):
@@ -21,11 +36,22 @@ class Game:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     return
-            self.screen.fill((0, 0, 0, 0.5), rect=None, special_flags=0)
-            self.player.draw(self.screen)
-            self.player.update(self.dt)
+
+            self.updatable.update(self.dt)
+
+            for asteroid in self.asteroids:
+                if asteroid.collides_with(self.player):
+                    print("Game over!")
+                    sys.exit()
+
+            self.screen.fill("black")
+
+            for obj in self.drawable:
+                obj.draw(self.screen)
+
             pygame.display.flip()
-            self.dt = self.clock.tick(60)/1000
+
+            self.dt = self.clock.tick(144)/1000
 
 if __name__ == "__main__":
     Game()
